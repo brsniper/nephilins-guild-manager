@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Plus, Shield, Trash2, Trophy, Swords, Sparkles, Loader2, 
   Search, User, X, Gift, Calendar, LayoutDashboard, Coins, Ticket, CheckCircle2, ArrowLeft,
-  Zap, History, Settings, BookOpen, UserPlus2
+  Zap, History, Settings, BookOpen, UserPlus2, Lock, LogOut
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { PT, Player, Role, PTColor, PT_COLORS, Reward, AttendanceSession, RewardType, WarType } from './types';
@@ -13,6 +13,9 @@ import { PTCard } from './components/PTCard';
 type Tab = 'management' | 'rewards' | 'presence';
 
 const App: React.FC = () => {
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => !!localStorage.getItem("admin_user"));
+  const [adminUser, setAdminUser] = useState(() => localStorage.getItem("admin_user") || "");
   const [activeTab, setActiveTab] = useState<Tab>('management');
   
   // States
@@ -156,6 +159,7 @@ const App: React.FC = () => {
   };
 
   const handleAddPT = () => {
+    if (!isAdmin) { alert('Apenas admin pode criar unidades'); return; }
     if (!newPTName.trim()) return;
     setPts(prev => [...prev, { id: crypto.randomUUID(), name: newPTName, color: newPTColor, players: [] }]);
     setNewPTName('');
@@ -163,6 +167,7 @@ const App: React.FC = () => {
   };
 
   const handleAddClass = () => {
+    if (!isAdmin) { alert('Apenas admin pode gerenciar classes'); return; }
     if (!newClassName.trim()) return;
     if (classes.includes(newClassName.trim())) return;
     setClasses(prev => [...prev, newClassName.trim()].sort());
@@ -170,12 +175,14 @@ const App: React.FC = () => {
   };
 
   const removeClass = (cls: string) => {
+    if (!isAdmin) { alert('Apenas admin pode remover classes'); return; }
     if (confirm(`Remover a classe ${cls}? Isso não afetará jogadores já cadastrados.`)) {
       setClasses(prev => prev.filter(c => c !== cls));
     }
   };
 
   const submitNewPlayer = () => {
+    if (!isAdmin) { alert('Apenas admin pode adicionar jogadores'); return; }
     if (!playerModal.ptId || !newPlayerData.name.trim()) return;
     setPts(prev => prev.map(pt => {
       if (pt.id === playerModal.ptId) {
@@ -315,8 +322,14 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4 w-full lg:w-auto">
-            <button onClick={resetData} title="Resetar Banco de Dados" className="p-2.5 text-slate-500 hover:text-red-400 bg-slate-800/50 rounded-xl border border-slate-800 transition-colors"><Trash2 size={20} /></button>
-            <button onClick={() => setIsManagingClasses(true)} title="Arsenal de Classes" className="p-2.5 text-slate-500 hover:text-sky-400 bg-slate-800/50 rounded-xl border border-slate-800 transition-colors"><BookOpen size={20} /></button>
+            {isAdmin && <span className="text-xs text-sky-400 font-bold px-3 py-1 bg-sky-500/10 rounded-full border border-sky-500/30">Admin: {adminUser}</span>}
+            {isAdmin ? (
+              <button onClick={() => { localStorage.removeItem('admin_user'); setIsAdmin(false); setAdminUser(''); }} title="Logout" className="p-2.5 text-slate-500 hover:text-red-400 bg-slate-800/50 rounded-xl border border-slate-800 transition-colors"><LogOut size={20} /></button>
+            ) : (
+              <button onClick={() => setIsLoginOpen(true)} title="Login Admin" className="p-2.5 text-slate-500 hover:text-sky-400 bg-slate-800/50 rounded-xl border border-slate-800 transition-colors"><Lock size={20} /></button>
+            )}
+            {isAdmin && <button onClick={resetData} title="Resetar Banco de Dados" className="p-2.5 text-slate-500 hover:text-red-400 bg-slate-800/50 rounded-xl border border-slate-800 transition-colors"><Trash2 size={20} /></button>}
+            {isAdmin && <button onClick={() => setIsManagingClasses(true)} title="Arsenal de Classes" className="p-2.5 text-slate-500 hover:text-sky-400 bg-slate-800/50 rounded-xl border border-slate-800 transition-colors"><BookOpen size={20} /></button>}
             <div className="h-8 w-px bg-slate-800 hidden lg:block"></div>
             <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
               <button 
@@ -435,12 +448,14 @@ const App: React.FC = () => {
                   key={pt.id} pt={pt} 
                   highlightedPlayerId={selectedPlayerId}
                   onAddPlayer={(id) => setPlayerModal({ isOpen: true, ptId: id })}
-                  onDeletePT={(id) => confirm('Apagar PT?') && setPts(pts.filter(p=>p.id!==id))}
+                  onDeletePT={(id) => !isAdmin ? alert('Apenas admin pode deletar PTs') : confirm('Apagar PT?') && setPts(pts.filter(p=>p.id!==id))}
                   onRemovePlayer={(ptId, pId) => {
+                    if (!isAdmin) { alert('Apenas admin pode remover jogadores'); return; }
                     setPts(pts.map(p => p.id === ptId ? {...p, players: p.players.filter(x=>x.id!==pId)} : p));
                     if(pId === selectedPlayerId) clearHighlight();
                   }}
                   onUpdateRole={(ptId, pId, r) => {
+                    if (!isAdmin) { alert('Apenas admin pode alterar roles'); return; }
                     setPts(pts.map(p => {
                       if (p.id !== ptId) return p;
                       return {...p, players: p.players.map(x => {
@@ -794,3 +809,52 @@ const App: React.FC = () => {
 
 
 export default App;
+
+// Login Component
+const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: () => void; onLogin: (user: string) => void }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    if (username === 'Brshrek' && password === 'Jesus321*!') {
+      localStorage.setItem('admin_user', username);
+      onLogin(username);
+      setUsername('');
+      setPassword('');
+      setError('');
+      onClose();
+    } else {
+      setError('Usuário ou senha incorretos');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-slate-900 border border-sky-500/50 rounded-lg p-6 w-80">
+        <h2 className="text-xl font-bold text-sky-400 mb-4">Login Administrativo</h2>
+        <input
+          type="text"
+          placeholder="Usuário"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full bg-slate-800 border border-sky-500/30 rounded px-3 py-2 text-white mb-3"
+        />
+        <input
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full bg-slate-800 border border-sky-500/30 rounded px-3 py-2 text-white mb-3"
+        />
+        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+        <div className="flex gap-2">
+          <button onClick={handleLogin} className="flex-1 bg-sky-500 hover:bg-sky-600 text-white rounded px-4 py-2">Login</button>
+          <button onClick={onClose} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded px-4 py-2">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
