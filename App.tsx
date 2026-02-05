@@ -798,10 +798,5 @@ const App: React.FC = () => {
   );
 };
 
+
 export default App;
-      const data = await response.json();
-      if (data.success) {
-        setGuildLogo(data.logo);
-      }
-    } catch (e) { console.error(e); } finally { setIsGeneratingLogo(false); }
-  };
