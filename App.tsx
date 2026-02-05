@@ -806,7 +806,7 @@ const App: React.FC = () => {
       <LoginModal 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
-        onLogin={(user) => setAdminUser(user)}
+        onLogin={(user) => { setAdminUser(user); setIsAdmin(true); }}
       />
     </div>
   );
