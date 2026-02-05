@@ -153,21 +153,10 @@ const App: React.FC = () => {
   const generateModernLogo = async () => {
     setIsGeneratingLogo(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [{ text: 'A highly modern, minimalist logo for a legendary guild Nephilins. Abstract fusion of angelic wings and a crystalline sword. Cyan and gold gradients on dark charcoal.' }],
-        },
-        config: { imageConfig: { aspectRatio: "1:1" } },
-      });
-      if (response.candidates?.[0]?.content?.parts) {
-        for (const part of response.candidates[0].content.parts) {
-          if (part.inlineData) {
-            setGuildLogo(`data:image/png;base64,${part.inlineData.data}`);
-            break;
-          }
-        }
+      const response = await fetch("/api/generate-logo", { method: "POST" });
+      const data = await response.json();
+      if (data.success) {
+        setGuildLogo(data.logo);
       }
     } catch (e) { console.error(e); } finally { setIsGeneratingLogo(false); }
   };
@@ -810,3 +799,9 @@ const App: React.FC = () => {
 };
 
 export default App;
+      const data = await response.json();
+      if (data.success) {
+        setGuildLogo(data.logo);
+      }
+    } catch (e) { console.error(e); } finally { setIsGeneratingLogo(false); }
+  };
