@@ -803,12 +803,14 @@ const App: React.FC = () => {
         </div>
       )}
 
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)} 
+        onLogin={(user) => setAdminUser(user)}
+      />
     </div>
   );
 };
-
-
-export default App;
 
 // Login Component
 const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: () => void; onLogin: (user: string) => void }) => {
@@ -858,3 +860,5 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: ()
     </div>
   );
 };
+
+export default App;
