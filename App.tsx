@@ -151,14 +151,8 @@ const App: React.FC = () => {
   };
 
   const generateModernLogo = async () => {
-    setIsGeneratingLogo(true);
-    try {
-      const response = await fetch("/api/generate-logo", { method: "POST" });
-      const data = await response.json();
-      if (data.success) {
-        setGuildLogo(data.logo);
-      }
-    } catch (e) { console.error(e); } finally { setIsGeneratingLogo(false); }
+    // TODO: Implement logo generation with backend API
+    console.log('Logo generation coming soon!');
   };
 
   const handleAddPT = () => {
@@ -282,7 +276,7 @@ const App: React.FC = () => {
                 {guildLogo ? <img src={guildLogo} className="w-full h-full object-cover" /> : <Shield className="text-sky-400" size={32} />}
                 {isGeneratingLogo && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Loader2 className="animate-spin text-sky-400" /></div>}
               </div>
-              <button onClick={generateModernLogo} className="absolute -bottom-1 -right-1 bg-yellow-500 p-1.5 rounded-full border-2 border-slate-900 hover:bg-yellow-400 shadow-xl"><Sparkles size={12} /></button>
+              {/* <button onClick={generateModernLogo} className="absolute -bottom-1 -right-1 bg-yellow-500 p-1.5 rounded-full border-2 border-slate-900 hover:bg-yellow-400 shadow-xl"><Sparkles size={12} /></button> */}
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-white to-sky-400">NEPHILINS</h1>
